@@ -1,0 +1,39 @@
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: "15.x"
+
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '2.x'
+    addToPath: true
+
+- script: |
+    set -e
+    sudo xcode-select -s /Applications/Xcode_12.2.app
+  displayName: Switch to Xcode 12
+  condition: and(succeeded(), eq(variables['VSCODE_ARCH'], 'arm64'))
+
+- script: |
+    set -e
+    npm install -g node-gyp@latest
+    node-gyp --version
+  displayName: Update node-gyp
+  condition: and(succeeded(), eq(variables['VSCODE_ARCH'], 'arm64'))
+
+- script: |
+    set -e
+    export npm_config_arch="$(VSCODE_ARCH)"
+    yarn
+  displayName: Install Dependencies
+
+- script: |
+    set -e
+    yarn prepublish
+  displayName: Build
+
+- script: |
+    set -e
+    yarn test
+  displayName: Run Tests
+  condition: and(succeeded(), eq(variables['VSCODE_ARCH'], 'x64'))
